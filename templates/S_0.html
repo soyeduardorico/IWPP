@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{url_for ('static', filename='iwpp_styles.css')}}">
+    <script type="text/javascript" src="{{url_for('static', filename='iwpp_functions.js')}}"></script>
+<head>
+    <style>
+        #button1 {background-image: url("{{url_for ('static', filename ='images/button_thames_catchment_area.jpg') }}");}
+        #button2 {background-image: url("{{url_for ('static', filename ='images/button_london_gla_area.jpg') }}");}
+        #button3 {background-image: url("{{url_for ('static', filename ='images/button_lpa_area.jpg') }}");}
+        #button4 {background-image: url("{{url_for ('static', filename ='images/button_water_companies_area.jpg') }}");}
+
+    </style>
+</head>
+<body>
+    <p></p>
+
+    <div class=main-window>
+        <button id="button1" class="large_button"></button>
+        <button id="button2" class="large_button"></button>
+        <button id="button3" class="large_button" onclick="window.location.href='{{ url_for('S_3_3') }}'"></button>
+        <button id="button4" class="large_button" onclick="moveToPage('/S_4_2')"></button>
+    </div>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>My Map</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+</head>
+<body>
+  <div id="map" style="height: 500px;"></div>
+  <label>
+    <input type="checkbox" id="toggle" checked> Rectangle
+  </label>
+  <button id="draw-polygon">Draw Polygon</button>
+  <script>
+    // Initialize the map
+    var map = L.map('map').setView([51.505, -0.09], 13);
+
+    // Add a tile layer to the map
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Map data &copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Define the rectangle coordinates
+    var rectangleCoords = [[51.5, -0.1], [51.5, 0.1], [51.6, 0.1], [51.6, -0.1]];
+
+    // Create a Leaflet polygon from the rectangle coordinates
+    var rectangle = L.polygon(rectangleCoords, {color: 'red', fillColor: 'red'}).addTo(map);
+
+    // Hide the rectangle by default
+    rectangle.setStyle({color: 'transparent', fillColor: 'transparent'});
+
+    // Add an image overlay to the rectangle
+    var reference_image_name = '{{ session_name }}' + "image.jpg"
+    var imageUrl = "{{url_for ('data', filename ='ADDSHARE') }}".replace("ADDSHARE", reference_image_name);;
+    var imageBounds = rectangle.getBounds();
+    var imageOverlay = L.imageOverlay(imageUrl, imageBounds, {opacity: 0.5}).addTo(map);
+
+    // Hide the image overlay by default
+    imageOverlay.setOpacity(0);
+
+    // Create a separate layer for the polygons
+    var polygonLayer = L.layerGroup().addTo(map);
+
+    // Activate the rectangle and image overlay when the toggle is checked
+    var toggle = document.getElementById('toggle');
+    toggle.addEventListener('change', function() {
+      if (toggle.checked) {
+        rectangle.setStyle({color: 'red', fillColor: 'red'});
+        polygonLayer.setStyle({color: 'blue', fillColor: 'blue'});
+        polygonLayer.eachLayer(function(layer) {
+          layer.setStyle({color: 'blue', fillColor: 'blue'});
+        });
+        imageOverlay.setOpacity(0.5);
+      } else {
+        rectangle.setStyle({color: 'transparent', fillColor: 'transparent'});
+        // polygonLayer.setStyle({color: 'transparent', fillColor: 'transparent'});
+        // polygonLayer.eachLayer(function(layer) {
+        //   layer.setStyle({color: 'transparent', fillColor: 'transparent'});
+        // });
+        imageOverlay.setOpacity(0);
+      }
+    });
+
+    // Add a click event listener to the map to draw polygons on the polygon layer
+    var drawPolygonButton = document.getElementById('draw-polygon');
+    var drawPolygonMode = false;
+    var polygonPoints = [];
+    var polygon = null;
+    drawPolygonButton.addEventListener('click', function() {
+      if (drawPolygonMode) {
+        map.off('click');
+        drawPolygonMode = false;
+        drawPolygonButton.innerHTML = 'Draw Polygon';
+        if (polygonPoints.length > 2) {
+          polygon = L.polygon(polygonPoints, {color: 'blue', fillColor: 'blue'}).addTo(polygonLayer);
+          polygon.on('click', function(e) {
+            var latlngs = polygon.getLatLngs();
+            var index = e.vertex.getIndex();
+            var latlng = e.vertex.getLatLng();
+            var newLatLngs = [];
+            for (var i = 0; i < latlngs.length; i++) {
+              if (i === index) {
+                newLatLngs.push(latlng);
+              }
+              newLatLngs.push(latlngs[i]);
+            }
+            polygon.setLatLngs(newLatLngs);
+          });
+        }
+        polygonPoints = [];
+      } else {
+        map.on('click', function(e) {
+          polygonPoints.push(e.latlng);
+          if (polygonPoints.length > 1) {
+            if (polygon) {
+              polygon.remove();
+            }
+            polygon = L.polygon(polygonPoints, {color: 'blue', fillColor: 'blue'}).addTo(map);
+            polygon.on('click', function(e) {
+              var latlngs = polygon.getLatLngs();
+              var index = e.vertex.getIndex();
+              var latlng = e.vertex.getLatLng();
+              var newLatLngs = [];
+              for (var i = 0; i < latlngs.length; i++) {
+                if (i === index) {
+                  newLatLngs.push(latlng);
+                }
+                newLatLngs.push(latlngs[i]);
+              }
+              polygon.setLatLngs(newLatLngs);
+            });
+          }
+        });
+        drawPolygonMode = true;
+        drawPolygonButton.innerHTML = 'Cancel Drawing';
+      }
+    });
+  </script>
+</body>
+</html>

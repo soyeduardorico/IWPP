@@ -1,0 +1,164 @@
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: rgb(216, 230, 253) !important;  /* Set the background color to light blue */
+}
+
+.main-window {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  height: 800px;
+  width: 800px;
+  margin: auto;
+  background-color: rgb(235, 240, 249);  /* Set the background color to light blue */
+  border: 1px solid black !important;  /* Add a thin border */
+}
+
+.large_button {
+  width: 300px;
+  height: 300px;
+  background-size: cover;
+  margin: 0 10px;
+  border: none;
+}
+
+.container{
+  width: 100%;
+  height: 100%;
+  background-color: #c5d3e8;
+  color: #090e1f;
+  font-family: Calibri;
+  font-size: 20px;
+  text-align: center;
+  vertical-align: middle  ;
+}
+
+#map {
+  height: 800px;
+  width: 800px;
+  margin: auto;
+}
+
+#output {
+  width: 100%;
+  height: 200px;
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  padding: 5px;
+  overflow: auto;
+}
+
+h1 {
+  color: #090e1f;
+  font-family: Calibri;
+  font-weight: bold;
+  font-size: 53px;
+  text-align: center;
+  vertical-align: middle  ;
+}
+
+h2 {
+  color: #090e1f;
+  font-family: Calibri;
+  font-size: 25px;
+  text-align: center;
+}
+
+h3 {
+  color: #090e1f;
+  font-family: Calibri!important;
+  font-size: 15px;
+  text-align: center;
+}
+
+p {
+  color: #090e1f;
+  font-family: Calibri;
+  font-size: 15px!important;
+  text-align: center;
+}
+
+#map-container {
+  position: relative;  /* Set the position of the map container to relative */
+}
+
+#button-container {
+  position: absolute;  /* Set the position of the button container to absolute */
+  bottom: 0;  /* Position the button container at the bottom of the map container */
+  width: 100%;  /* Make the button container span the entire width of the map container */
+  display: flex;
+  justify-content: space-between;
+  /* background: rgba(198, 212, 233, 0.7);  Optional: Add a semi-transparent background to the button container */
+  z-index: 1000;  /* Add a high z-index to make the buttons appear on top */
+
+}
+
+
+#button-container-top {
+  position: absolute;  /* Set the position of the button container to absolute */
+  top: 0;  /* Position the button container at the bottom of the map container */
+  width: 100%;  /* Make the button container span the entire width of the map container */
+  display: flex;
+  justify-content: flex-end;
+  /* background: rgba(198, 212, 233, 0.7);  Optional: Add a semi-transparent background to the button container */
+  z-index: 1000;  /* Add a high z-index to make the buttons appear on top */
+
+}
+
+
+.bottom-button {
+  width: calc(100% / 6 - 10px);
+  height: 40px;
+  margin: 5px;
+  border-radius: 5px;  /* Add a 5px border radius to round the corners */
+}
+
+.bottom-button-current {
+  width: calc(100% / 6 - 10px);
+  height: 40px;
+  margin: 5px;
+  border-radius: 5px;  /* Add a 5px border radius to round the corners */
+  background: rgb(243, 216, 62);  /* Optional: Add a semi-transparent background to the button container */
+}
+
+#side-container {
+  position: absolute;
+  top: 70px;
+  right: 10px;
+  width: 150px;
+  height: 650px;
+  background: white;
+  border: 1px solid black;  /* Add a thin border */
+  z-index: 1200;  /* Add a high z-index to make the container appear on top */
+  border-radius: 10px;  /* Add a 5px border radius to round the corners */
+  /* display: flex;  Add this line */
+  flex-direction: column;  /* Add this line */
+  /* justify-content: space-between;  Add this line */
+  align-items: center;  /* Add this line */
+  padding: 10px;  /* Add this line */
+
+}
+
+#side-inner-container {
+  width: 130px;
+  height: 210px;
+  background: rgb(240, 245, 253);
+  border: 1px solid black;  /* Add a thin border */
+  z-index: 1100;  /* Add a high z-index to make the container appear on top */
+  border-radius: 5px;  /* Add a 5px border radius to round the corners */
+  display: flex;  /* Add this line */
+  flex-direction: column;  /* Add this line */
+  justify-content: center;  /* Add this line */
+  align-items: center;  /* Add this line */
+}
+
+.status-rectangle {
+  width: 100px;
+  height: 17px;
+  /* display: flex; */
+  /* justify-content: center; */
+  align-items: center;
+  text-align: center;
+}

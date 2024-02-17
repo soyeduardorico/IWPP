@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{url_for ('static', filename='iwpp_styles.css')}}">
+    <script type="text/javascript" src="{{url_for('static', filename='iwpp_functions.js')}}"></script>
+    <head>
+        <style>
+            #dash {background-image: url("{{url_for ('static', filename ='images/temp_wsimod.jpg') }}");
+            width: 100%;
+            height: 100%;
+            }
+        </style>
+</head>
+
+<body>
+    <p></p>
+
+    <div id="map-container" class=main-window>
+
+        <iframe id="dash" class="large_button"></iframe>
+
+        <div id="side-container">
+
+            <p> DEVELOPMENTS</p>
+            <div>
+                <input type="checkbox" id="status1Checkbox">
+                <label for="status1Checkbox" style="background: rgb(255,0,0);">Status 3</label>
+            </div>
+            <div>
+                <input type="checkbox" id="status2Checkbox">
+                <label for="status2Checkbox" style="background: rgb(255,165,0);">Status 3+2</label>
+            </div>
+            <div>
+                <input type="checkbox" id="status3Checkbox">
+                <label for="status3Checkbox" style="background: rgb(255, 255, 0);">Status 3+2+1</label>
+            </div>
+
+            <p>-----------------</p>
+
+            <p> OFFSET</p>
+            <div>
+                <input type="checkbox" id="status4Checkbox">
+                <label for="status4Checkbox" style="background: rgb(255,0,0);">Status 3</label>
+            </div>
+            <div>
+                <input type="checkbox" id="status5Checkbox">
+                <label for="status5Checkbox" style="background: rgb(255,165,0);">Status 3+2</label>
+            </div>
+            <div>
+                <input type="checkbox" id="status6Checkbox">
+                <label for="status6Checkbox" style="background: rgb(255, 255, 0);">Status 3+2+1</label>
+            </div>
+
+            <p>-----------------</p>
+
+            <p> CLIMATE CHANGE</p>
+            <div>
+                <input type="checkbox" id="status7Checkbox">
+                <label for="status7Checkbox" style="background: rgb(208, 205, 255);">rcp26</label>
+            </div>
+            <div>
+                <input type="checkbox" id="status8Checkbox">
+                <label for="status8Checkbox" style="background: rgb(188, 184, 253);">rcp85</label>
+            </div>
+
+        </div>
+
+        <div id="button-container">
+            <button class="bottom-button" onclick="window.location.href='{{ url_for('S_3_3') }}'">Baseline</button>
+            <button class="bottom-button" onclick="moveToPage('/S_3_4')">River FLows</button>
+            <button class="bottom-button" onclick="moveToPage('/S_3_5')">Pollution</button>
+            <button class="bottom-button" onclick="moveToPage('/S_3_6')">Water demand</button>
+            <button class="bottom-button-current">Full Model</button>
+            <button class="bottom-button" onclick="window.location.href='{{ url_for('S_0') }}'">Back</button>
+        </div>
+
+        <div id="button-container-top">
+            <button  class="bottom-button"  onclick="toggleSideContainer()"> Show/hide scenario builder </button>
+        </div>
+    </div>
+
+    <script>
+
+        // Get a reference to the "side-container" element
+        var sideContainer = document.getElementById('side-container');
+
+    </script>
+
+</body>
+
+</html>

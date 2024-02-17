@@ -1,0 +1,13 @@
+{
+"type": "FeatureCollection",
+"name": "water_sources2",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "Company": "Thames Water", "Source": "Walton WW", "id": 6 }, "geometry": { "type": "Point", "coordinates": [ -0.397912122874062, 51.403624251859881 ] } },
+{ "type": "Feature", "properties": { "Company": "Thames Water", "Source": "Hampton WW", "id": 5 }, "geometry": { "type": "Point", "coordinates": [ -0.378541080608352, 51.41224038569397 ] } },
+{ "type": "Feature", "properties": { "Company": "Thames Water", "Source": "Ashford WW", "id": 4 }, "geometry": { "type": "Point", "coordinates": [ -0.438759040520941, 51.416711929411065 ] } },
+{ "type": "Feature", "properties": { "Company": "Thames Water", "Source": "Kempton WW", "id": 3 }, "geometry": { "type": "Point", "coordinates": [ -0.402960433549421, 51.427345472292608 ] } },
+{ "type": "Feature", "properties": { "Company": "Affinity Water", "Source": "Iver Water WW", "id": 1 }, "geometry": { "type": "Point", "coordinates": [ -0.498269908058805, 51.51130137128682 ] } },
+{ "type": "Feature", "properties": { "Company": "Affinity Water", "Source": "Borehole", "id": 2 }, "geometry": { "type": "Point", "coordinates": [ -0.517312070150224, 51.497667513823153 ] } }
+]
+}

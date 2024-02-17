@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>My Map</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+  <link rel="stylesheet" type="text/css" href="{{url_for ('static', filename='iwpp_styles.css')}}">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.0/proj4.js"></script>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.geometryutil/0.2.0/leaflet.geometryutil.min.js"></script>
+  <script type="text/javascript" src="{{url_for('static', filename='iwpp_functions.js')}}"></script>
+
+</head>
+<body>
+  <p></p>
+  <div id="map-container" class="main-window">
+  <div id="map" ></div>
+
+
+  <div id="button-container">
+    <button class="bottom-button" onclick="window.location.href='{{ url_for('D_1') }}'">Dashboard</button>
+    <button class="bottom-button-current">Import site</button>
+    <button class="bottom-button" onclick="window.location.href='{{ url_for('D_3') }}'">Storm network</button>
+    <button class="bottom-button">Foul network</button>
+    <button class="bottom-button">Potable network</button>
+    <button class="bottom-button">Calc</button>
+  </div>
+
+  <div id="side-container">
+    <label>
+      <input type="checkbox" id="toggle" checked> Rectangle
+    </label>
+
+    <input type="range" id="opacity-slider" min="0" max="1" step="0.1" value="0.5">
+    <input type="range" id="opacity-slider-poly" min="0" max="1" step="0.1" value="0.5">
+  </div>
+
+  <div id="button-container-top">
+    <button  class="bottom-button"  onclick="toggleSideContainer()"> Stats </button>
+  </div>
+
+</div>
+
+  <script>
+    var sideContainer = document.getElementById('side-container');
+    // Initialize the map
+    var map = L.map('map',).setView([51.505, -0.09], 13);
+
+    // Add a tile layer to the map
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Map data &copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Define the rectangle coordinates
+    var rectangleCoords = [];
+    console.log(rectangleCoords);
+
+    bringRectangle();
+    function bringRectangle2(){
+      rectangleCoords =[[51.45673455150474, -0.06608963012695314],[51.492018739579336, -0.06608963012695314],[51.492018739579336, -0.01630783081054688],[51.45673455150474, -0.01630783081054688]]
+    }
+
+    function bringRectangle() {
+  // Get the rectangle coordinates from the server
+  $.ajax({
+    url: '/bringRect',
+    type: 'post',
+    contentType: 'application/json',
+    dataType: 'json',
+    data: {}
+  }).done(function(result) {
+    // Store the rectangle coordinates in a variable
+    var rectangleCoords = result;
+    console.log(result);
+
+    // Create a Leaflet polygon from the rectangle coordinates
+    var rectangle = L.polygon(rectangleCoords, {color: 'black', fillColor: 'transparent'}).addTo(map);
+
+    // Fit the map to the bounds of the rectangle
+    map.fitBounds(rectangle.getBounds());
+
+    // Add an image overlay to the rectangle
+    var reference_image_name = '{{ session_name }}' + "image.jpg"
+    var imageUrl = "{{url_for ('data', filename ='ADDSHARE') }}".replace("ADDSHARE", reference_image_name);
+    var imageBounds = rectangle.getBounds();
+    var imageOverlay = L.imageOverlay(imageUrl, imageBounds, {opacity: 0.5}).addTo(map);
+
+    // Create a separate layer for the polygons
+    var polygonLayer = L.layerGroup().addTo(map);
+
+    // Activate the rectangle and image overlay when the toggle is checked
+    var toggle = document.getElementById('toggle');
+    toggle.addEventListener('change', function() {
+      if (toggle.checked) {
+        rectangle.setStyle({color: 'black', fillColor: 'transparent'});
+        polygonLayer.setStyle({color: 'blue', fillColor: 'blue'});
+        imageOverlay.setOpacity(0.5); // Set the opacity of the image overlay to 0.5
+      } else {
+        rectangle.setStyle({color: 'transparent', fillColor: 'transparent'});
+        polygonLayer.setStyle({color: 'transparent', fillColor: 'transparent'});
+        imageOverlay.setOpacity(0); // Set the opacity of the image overlay to 0
+      }
+    });
+
+    // Add an opacity slider for the image overlay
+    var opacitySlider = document.getElementById('opacity-slider');
+    opacitySlider.addEventListener('input', function() {
+      var opacity = opacitySlider.value;
+      imageOverlay.setOpacity(opacity);
+    });
+
+  });
+}
+
+
+    // Create a Leaflet.draw control and add it to the map
+    var drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    var imageRectangle=[];
+
+    var drawControl = new L.Control.Draw({
+      draw: {
+        polyline: false,
+        circle: false,
+        circlemarker: false,
+        marker: false,
+        polygon: {
+          allowIntersection: false,
+          drawError: {
+            color: '#b00b00',
+            timeout: 1000
+          },
+          shapeOptions: {
+            color: '#3388ff'
+          }
+        },
+        rectangle: false
+      },
+      edit: {
+        featureGroup: drawnItems
+      }
+    });
+    map.addControl(drawControl);
+
+    // Handle drawing events
+    map.on(L.Draw.Event.CREATED, function (event) {
+      var layer = event.layer;
+      drawnItems.addLayer(layer);
+      
+      // Set default LandUse as "Urban"
+      layer.options.landUse = "Urban";
+
+      // Create a popup menu for LandUse
+      var popupContent = L.DomUtil.create('div');
+      popupContent.innerHTML = `
+        <p><b>Land Use:</b></p>
+        <select class="land-use-select">
+          <option value="Urban">Urban</option>
+          <option value="Rural">Rural</option>
+          <option value="Building">Building</option>
+        </select>
+        <button class="popup-close">Close</button>
+      `;
+
+      // Update LandUse on select change
+      var select = popupContent.querySelector('.land-use-select');
+      select.addEventListener('change', function (e) {
+        var selectedLandUse = e.target.value;
+        layer.options.landUse = selectedLandUse;
+        
+        // Change polygon color based on LandUse
+        switch (selectedLandUse) {
+          case 'Urban':
+            layer.setStyle({ fillColor: 'red' });
+            break;
+          case 'Rural':
+            layer.setStyle({ fillColor: 'green' });
+            break;
+          case 'Building':
+            layer.setStyle({ fillColor: 'yellow' });
+            break;
+          default:
+            layer.setStyle({ fillColor: '#3388ff' });
+            break;
+        }
+      });
+
+      // Open popup when polygon is clicked
+      layer.on('click', function (e) {
+        if (layer.options.landUse === 'Building') {
+          var buildingPopupContent = L.DomUtil.create('div');
+          buildingPopupContent.innerHTML = `
+            <p><b>Density:</b></p>
+            <select class="density-select">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+            </select>
+            <button class="building-popup-close">Close</button>
+          `;
+
+          // Update density on select change
+          var densitySelect = buildingPopupContent.querySelector('.density-select');
+          densitySelect.addEventListener('change', function (e) {
+            var selectedDensity = e.target.value;
+            layer.options.density = selectedDensity;
+          });
+
+          // Open building popup when 'd' key is pressed
+          document.addEventListener('keydown', function (e) {
+            if (e.key === 'd') {
+              layer.bindPopup(buildingPopupContent, { minWidth: 200 }).openPopup();
+            }
+          });
+
+          // Close building popup when close button is clicked
+          var buildingCloseButton = buildingPopupContent.querySelector('.building-popup-close');
+          buildingCloseButton.addEventListener('click', function () {
+            layer.closePopup();
+          });
+        }
+        else {
+          layer.bindPopup(popupContent, { minWidth: 200 }).openPopup();
+        }
+      });
+
+      // Calculate area on hover
+      layer.on('mouseover', function (e) {
+        var area = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0]);
+        var tooltipContent = 'Area: ' + area.toFixed(2) + ' square meters<br>Land Use: ' + layer.options.landUse;
+        
+        if (layer.options.landUse === 'Building' && layer.options.density) {
+          tooltipContent += '<br>Density: ' + layer.options.density;
+        }
+        
+        layer.bindTooltip(tooltipContent, { permanent: false, sticky: true }).openTooltip();
+      });
+      
+      // Hide tooltip when mouse pointer moves away
+      layer.on('mouseout', function (e) {
+        layer.closeTooltip();
+      });
+
+      // Set initial polygon color based on LandUse
+      switch (layer.options.landUse) {
+        case 'Urban':
+          layer.setStyle({ fillColor: 'red' });
+          break;
+        case 'Rural':
+          layer.setStyle({ fillColor: 'green' });
+          break;
+        case 'Building':
+          layer.setStyle({ fillColor: 'yellow' });
+          break;
+        default:
+          layer.setStyle({ fillColor: '#3388ff' });
+          break;
+      }
+    });
+
+
+
+
+    // Add an event listener to the opacity slider to update the polygon layer opacity
+    var opacitySlider = document.getElementById('opacity-slider-poly');
+    opacitySlider.addEventListener('input', function() {
+      var opacity = opacitySlider.value;
+      polygonLayer.setStyle({fillOpacity: opacity});
+    });
+
+
+    // Save button click event handler
+    var saveButton = document.getElementById('save-button');
+    saveButton.addEventListener('click', function () {
+      var output = document.getElementById('output');
+      var features = [];
+
+      drawnItems.eachLayer(function (layer) {
+        var feature = {
+          type: 'Feature',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [layer.getLatLngs()[0].map(function (latLng) {
+              return [latLng.lng, latLng.lat];
+            })]
+          },
+          properties: {
+            LandUse: layer.options.landUse,
+            Density: layer.options.density || null
+          }
+        };
+
+        features.push(feature);
+      });
+
+      var geojson = {
+        type: 'FeatureCollection',
+        features: features
+      };
+
+      output.innerText = JSON.stringify(geojson, null, 2);
+    });
+
+  </script>
+</body>
+</html>

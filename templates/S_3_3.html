@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{url_for ('static', filename='iwpp_styles.css')}}">
+    <script type="text/javascript" src="{{url_for('static', filename='iwpp_functions.js')}}"></script>
+
+    <head>
+
+</head>
+<body>
+    <p></p>
+
+    <div id="map-container" class=main-window>
+        {{ map | safe }}
+
+        <div id="side-container">
+
+            <p> DEVS (m2)</p>
+            <p style="background: rgb(255, 255, 0);">Status 1</p> 
+            <p id="status1Value"></p>
+            <p style="background: rgb(255,165,0);">Status 2</p> 
+            <p id="status2Value"></p>
+            <p style="background: rgb(255,0,0);">Status 3</p> 
+            <p id="status3Value"></p>
+
+            <p>-----------------</p>
+
+            <p> OFFSET (m3/d)</p>
+            <p style="background: rgb(255, 255, 0);">Status 1</p> 
+            <p id="status4Value"></p>
+            <p style="background: rgb(255,165,0);">Status 2</p> 
+            <p id="status5Value"></p>
+            <p style="background: rgb(255,0,0);">Status 3</p> 
+            <p id="status6Value"></p>
+
+            <p>-----------------</p>
+
+            <p> TOT. DEVS. (m2)</p>
+            <p id="status7Value"></p>
+            <p> TOT. OFFSET (m3/d)</p>
+            <p id="status8Value"></p>
+
+        </div>
+
+
+
+        <div id="button-container">
+            <button class="bottom-button-current" onclick="window.location.href='{{ url_for('S_3_3') }}'">Baseline</button>
+            <button class="bottom-button" onclick="moveToPage('/S_3_4')">River FLows</button>
+            <button class="bottom-button" onclick="moveToPage('/S_3_5')">Pollution</button>
+            <button class="bottom-button" onclick="moveToPage('/S_3_6')">Water demand</button>
+            <button class="bottom-button" onclick="window.location.href='{{ url_for('S_3_7') }}'">Full Model</button>
+            <button class="bottom-button" onclick="window.location.href='{{ url_for('S_0') }}'">Back</button>
+        </div>
+
+        <div id="button-container-top">
+            <button  class="bottom-button"  onclick="toggleSideContainer()"> Show/hide stats </button>
+        </div>
+
+
+
+    </div>
+
+    <script>
+        // Get a reference to the "side-container" element
+        var sideContainer = document.getElementById('side-container');
+        var development_area = {{ development_area|tojson|safe }};
+        var offset_volume = {{ offset_volume|tojson|safe }};
+        var development_area_by_status = {{ development_area_by_status|tojson|safe }};
+        var offset_volume_by_status = {{ offset_volume_by_status|tojson|safe }};
+
+
+        document.getElementById('status1Value').textContent = development_area_by_status[0];
+        document.getElementById('status2Value').textContent = development_area_by_status[1];
+        document.getElementById('status3Value').textContent = development_area_by_status[2];
+        document.getElementById('status4Value').textContent = offset_volume_by_status[0];
+        document.getElementById('status5Value').textContent = offset_volume_by_status[1];
+        document.getElementById('status6Value').textContent = offset_volume_by_status[2];
+        document.getElementById('status7Value').textContent = development_area;
+        document.getElementById('status8Value').textContent = offset_volume;
+
+
+    </script>
+</body>
+</html>

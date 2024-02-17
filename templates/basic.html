@@ -1,0 +1,15 @@
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script type="text/javascript" src="{{url_for('static', filename='developer/data/developments_1.js')}}"></script>
+<script>
+// Assuming developers_1.js defines a variable `data`
+var sizes = data.map(function(d) { return d.size; });
+
+var histogram = d3.histogram()
+    .value(function(d) { return d; })
+    .domain([d3.min(sizes), d3.max(sizes)])
+    .thresholds(d3.range(d3.min(sizes), d3.max(sizes), 10)); // Change 10 to the desired bin width
+
+var bins = histogram(sizes);
+
+// Create SVG for the histogram here using bins
+</script>

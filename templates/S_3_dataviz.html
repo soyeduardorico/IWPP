@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Development Data Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        .main-window {
+            max-width: 100%;
+            max-height: 100%;
+        }
+    </style>
+
+</head>
+<body>
+    <h1>Development Data Analysis</h1>
+
+    <label for="status">Select Status:</label>
+    <select id="status">
+        {% for status in statuses %}
+            <option value="{{ status }}">{{ status }}</option>
+        {% endfor %}
+    </select>
+
+    <button onclick="updateData()">Show Data</button>
+
+    <div id="map-container" class="main-window">
+        <canvas id="populationChart"    ></canvas>
+    </div>
+
+    <script>
+        var myChart;
+        function updateData() {
+            var status = document.getElementById('status').value;
+            fetch('/get_data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'status=' + status
+            })
+            .then(response => response.json())
+            .then(data => {
+                var labels = data.map(function(item) {
+                    return 'Area ' + item.plan_area; // or any other identifier
+                });
+                var existingPopulation = data.map(function(item) {
+                    return item.existing_population;
+                });
+                var proposedPopulation = data.map(function(item) {
+                    return item.proposed_population;
+                });
+
+                // Destroy the existing chart
+                if (myChart) {
+                    myChart.destroy();
+                }
+
+                var ctx = document.getElementById('populationChart').getContext('2d');
+                myChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Existing Population',
+                            data: existingPopulation,
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }, {
+                            label: 'Proposed Population',
+                            data: proposedPopulation,
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>

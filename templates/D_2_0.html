@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Rectangle Drawing App</title>
+  <!-- Add Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+  <!-- Add Leaflet JavaScript -->
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+  <!-- Add Leaflet.Draw and IWPP specific CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+  <link rel="stylesheet" type="text/css" href="{{url_for ('static', filename='iwpp_styles.css')}}">
+
+  <!-- Add Leaflet.Draw JavaScript -->
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="{{ url_for('static', filename='draw.js') }}"></script>
+  <script type="text/javascript" src="{{url_for('static', filename='iwpp_functions.js')}}"></script>
+
+  <!-- Add Mapbox GL JS CSS -->
+  <link href='https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css' rel='stylesheet' />
+
+  <!-- Add Mapbox GL JS -->
+  <script src='https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js'></script>
+  <script src="https://unpkg.com/leaflet-mapbox-gl"></script>
+
+</head>
+<body>
+  <p></p>
+  <div id="map-container" class="main-window">
+    <div id="map"></div>
+    
+    <div id="button-container">
+      <button class="bottom-button" onclick="window.location.href='{{ url_for('D_1') }}'">Dashboard</button>
+      <button class="bottom-button-current">Import site</button>
+      <button class="bottom-button" onclick="window.location.href='{{ url_for('D_3') }}'">Storm network</button>
+      <button class="bottom-button">Foul network</button>
+      <button class="bottom-button">Potable network</button>
+      <button class="bottom-button">Calc</button>
+    </div>
+
+    <div id="side-container">
+    <input type="file" id="imageUpload" accept="image/*">
+      <p>-----------------</p>
+      <p>Image Opacity</p>
+    <input type="range" min="0" max="1" step="0.1" value="0.5" id="opacitySlider" onchange="changeOpacity(this.value)">
+      <p>-----------------</p>
+      <button id="save-button" onclick="saveToNext()">Save to draw</button>
+    </div>
+
+    <div id="button-container-top">
+      <button  class="bottom-button"  onclick="toggleSideContainer()"> Stats </button>
+    </div>
+    
+  </div>
+
+  <script>
+    var drawnItems;
+    var rectangleLayer;
+    var imageOverlay;
+    var sideContainer = document.getElementById('side-container');
+
+    // Initialize the map
+    var map = L.map('map').setView([51.577, -0.3082], 15);
+
+    // Add a base layer 
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    }).addTo(map);
+
+
+    // Add the draw control to the map
+    drawnItems = new L.FeatureGroup().addTo(map);
+    map.addControl(new L.Control.Draw({
+      draw: {
+        polyline: false,
+        polygon: false,
+        circle: false,
+        marker: false,
+        circlemarker: false,
+        rectangle: true // Allow rectangle drawing
+      },
+      edit: {
+        featureGroup: drawnItems,
+        remove: true
+      }
+    }));
+
+    // Add event listeners to save the drawn rectangle coordinates
+    map.on('draw:created', function (e) {
+      var layer = e.layer;
+      drawnItems.addLayer(layer);
+      rectangleLayer = layer;
+
+      updateImageOverlay();
+    });
+
+    map.on('draw:edited', function (e) {
+      var layers = e.layers;
+      layers.eachLayer(function (layer) {
+        if (layer === rectangleLayer) {
+          updateImageOverlay();
+        }
+      });
+    });
+
+    function updateImageOverlay() {
+      // Check if a rectangle is drawn
+      if (rectangleLayer) {
+        // Get the rectangle bounds
+        var bounds = rectangleLayer.getBounds();
+
+        // Remove the existing image overlay if present
+        if (imageOverlay) {
+          map.removeLayer(imageOverlay);
+        }
+
+        // Check if an image is uploaded
+        var imageUpload = document.getElementById('imageUpload');
+        if (imageUpload.files.length > 0) {
+          var imageFile = imageUpload.files[0];
+
+          // Create a FileReader to read the image file
+          var reader = new FileReader();
+
+          reader.onload = function(e) {
+            // Create an image element
+            var image = new Image();
+            image.src = e.target.result;
+
+            // Add an overlay image within the rectangle bounds
+            imageOverlay = L.imageOverlay(image.src, bounds, {
+              opacity: 0.5,
+              interactive: false
+            }).addTo(map);
+
+            // Adjust the image overlay size to fit the rectangle
+            imageOverlay.setLatLngs([
+              bounds.getSouthWest(),
+              bounds.getNorthWest(),
+              bounds.getNorthEast(),
+              bounds.getSouthEast()
+            ]);
+          };
+
+          // Read the image file as a data URL
+          reader.readAsDataURL(imageFile);
+        } else {
+          alert("Please upload an image.");
+        }
+      } else {
+        alert("Please draw a rectangle first.");
+      }
+    }
+
+    function changeOpacity(value) {
+      if (imageOverlay) {
+        imageOverlay.setOpacity(value);
+      }
+    }
+
+
+    function saveToNext(){
+      var features = [];
+
+      drawnItems.eachLayer(function (layer) {
+        var feature = {
+          type: 'Feature',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [layer.getLatLngs()[0].map(function (latLng) {
+              return [latLng.lng, latLng.lat];
+            })]
+          },
+          properties: {
+            LandUse: layer.options.landUse,
+            Density: layer.options.density || null
+          }
+        };
+
+        features.push(feature);
+      });
+      
+      var geojson = {
+        type: 'FeatureCollection',
+        features: features
+      };
+
+      var js_data = JSON.stringify(geojson, null, 2);
+      $.ajax({
+                url: '/saveRect',
+                type: 'post',
+                contentType: 'application/json',
+                dataType: 'json',
+                data: js_data
+            }).done(function(result) {console.log(result)
+              uploadImage()
+              window.location.href = "/D_2_1";
+
+            })
+    };
+
+    // Trigger the updateImageOverlay function when an image is selected or the rectangle is edited
+    var imageUpload = document.getElementById('imageUpload');
+    imageUpload.addEventListener('change', updateImageOverlay);
+
+    // Upload the image file to the server using AJAX
+    function uploadImage() {
+      var fileInput = document.getElementById('imageUpload');
+      var file = fileInput.files[0];
+      var formData = new FormData();
+      formData.append('image', file);
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', '/uploadImage');
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          console.log('Image uploaded successfully');
+        } else {
+          console.log('Image upload failed');
+        }
+      };
+      xhr.send(formData);
+    }
+
+    // Trigger the updateImageOverlay function when an image is selected or the rectangle is edited
+    var imageUpload = document.getElementById('imageUpload');
+    imageUpload.addEventListener('change', updateImageOverlay);
+
+  </script>
+</body>
+</html>

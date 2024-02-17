@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+    <meta name="description" content="A map integrating a GoJS Diagram and the Leaflet mapping library." />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+    <!-- Copyright 1998-2023 by Northwoods Software Corporation. -->
+    <!-- examples:  https://gojs.net/latest/samples/systemDynamics.html -->
+    <title>Leaflet.js and GoJS</title>
+  </head>
+  <body>
+
+    <div class="md:flex flex-col md:flex-row md:min-h-screen w-full max-w-screen-xl mx-auto">
+      <div id="navSide" class="flex flex-col w-full md:w-48 text-gray-700 bg-white flex-shrink-0"></div>
+      <!-- * * * * * * * * * * * * * -->
+      <!-- Start of GoJS sample code -->
+      <!-- <script src="../release/go.js"></script> -->
+      <script type="text/javascript" src="{{url_for ('static', filename='/GoJS-master/GoJS-master/release/go.js')}}"></script>
+      <div id="allSampleContent" class="p-4 w-full">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"></script>
+        <style type="text/css">
+          /* CSS applied to the Leaflet map */
+          .mapDiagram {
+            border: solid 1px black;
+            width: 700px;
+            height: 700px;
+            margin: auto;
+          }
+
+          .center {
+          margin: auto;
+          width: 700px;
+          }
+
+          #myDiagramDiv {
+            z-index: 701;
+          }
+
+          #jsonBox {
+            width: 700px;
+            height: 200px;
+            margin-top: 10px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 5px;
+            font-family: monospace;
+          }
+        </style>
+        <script id="code">
+
+
+          //-------------------------------------------------------------------------------------
+          // Initialises everything
+          //-------------------------------------------------------------------------------------
+          function init() {
+
+
+            //-------------------------------------------------------------------------------------
+            // Setting up the map
+            //-------------------------------------------------------------------------------------
+            if (window.goSamples) goSamples(); // init for these samples -- you don't need to call this
+            /* Leaflet init */
+            const defaultZoom = 12;
+            const defaultOrigin = [51.535149747814486, -0.1339940185851951];
+            myLeafletMap = L.map("map", {}).setView(defaultOrigin, defaultZoom);
+            L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+              attribution: '&copy;  < a href = "https://www.mapbox.com/about/maps/" > Mapbox < /a> &copy;  < a href = "http://www.openstreetmap.org/copyright" > OpenStreetMap < /a>',
+              maxZoom: 18,
+              minZoom: 2,
+              tileSize: 512,
+              zoomOffset: -1,
+              id: "mapbox/streets-v11",
+              accessToken: "pk.eyJ1Ijoic295ZWR1YXJkb3JpY28iLCJhIjoiY2tnbDFpOGRqMDV2ZzM5cnh0bjR5Z3FsdSJ9.pStbCDRInR4xBYG9cXq3bA"
+            }).addTo(myLeafletMap);
+            myLeafletMap.on("zoomend", updateNodes);
+            myLeafletMap.on("move", updatePosition);
+            myLeafletMap.on("moveend", updatePosition);
+            let myUpdatingGoJS = false; // prevent modifying data.latlong properties upon Leaflet "move" events
+
+            function updateNodes() { // called when zoom level has changed
+              myUpdatingGoJS = true;
+              myDiagram.commit(diag => {
+                diag.nodes.each(n => n.updateTargetBindings("latlong")); // without virtualization this can be slow if there are many nodes
+              }, null);
+              myUpdatingGoJS = false;
+            }
+
+            function updatePosition() { // called when map has been panned (i.e. top-left corner is at a different latlong)
+              const mapb = myLeafletMap.getBounds();
+              const pos = myLeafletMap.project([mapb.getNorth(), mapb.getWest()], myLeafletMap.getZoom());
+              myDiagram.position = new go.Point(pos.x, pos.y);
+            }
+
+
+            //-------------------------------------------------------------------------------------
+            // Setting up the diagram
+            //-------------------------------------------------------------------------------------
+            /* GoJS init */
+            // Since 2.2 you can also author concise templates with method chaining instead of GraphObject.make
+            // For details, see https://gojs.net/latest/intro/buildingObjects.html
+            const $ = go.GraphObject.make;
+            myDiagram = new go.Diagram("myDiagramDiv", {
+              "InitialLayoutCompleted": e => updatePosition(),
+              "dragSelectingTool.isEnabled": false,
+              "animationManager.isEnabled": false,
+              scrollMode: go.Diagram.InfiniteScroll,
+              allowZoom: false,
+              allowHorizontalScroll: false,
+              allowVerticalScroll: false,
+              hasHorizontalScrollbar: false,
+              hasVerticalScrollbar: false,
+              padding: 0,
+              defaultCursor: "default",
+              "toolManager.hoverDelay": 100, // how quickly tooltips are shown
+              "undoManager.isEnabled": true,
+              "ModelChanged": e => {
+                if (e.change === go.ChangedEvent.Transaction && (e.propertyName === "FinishedUndo" || e.propertyName === "FinishedRedo")) {
+                  setTimeout(() => updateNodes());
+                }
+              },
+            });
+            
+
+            //-------------------------------------------------------------------------------------
+            // Node Template for Type 1
+            //-------------------------------------------------------------------------------------
+            myDiagram.nodeTemplateMap.add("Type1",
+              $(go.Node, "Auto", {
+                locationSpot: go.Spot.Center,
+                cursor: "pointer",
+                toolTip: $("ToolTip", $(go.TextBlock, {
+                  margin: 4,
+                  textAlign: "center"
+                }, new go.Binding("text", "", d => `${d.key}\n[${d.latlong[0].toFixed(6)}, ${d.latlong[1].toFixed(6)}]`)))
+              }, $(go.Shape, "Circle", {
+                fill: "rgba(0, 255, 0, 0.7)",
+                stroke: "#082D47",
+                strokeWidth: 2,
+                width: 40,
+                height: 40
+              }),
+              // A two-way data binding with an Array of latitude,longitude numbers.
+              // We have to explicitly avoid updating the source data Array
+              // when myUpdatingGoJS is true; otherwise there would be accumulating errors.
+              new go.Binding("location", "latlong", data => {
+                const pos = myLeafletMap.project(data, myLeafletMap.getZoom());
+                return new go.Point(pos.x, pos.y);
+              }).makeTwoWay((pt, data) => {
+                if (myUpdatingGoJS) {
+                  return data.latlong; // no-op
+                } else {
+                  const ll = myLeafletMap.unproject(L.point(pt.x, pt.y), myLeafletMap.getZoom());
+                  return [ll.lat, ll.lng];
+                }
+              })));
+
+
+            //-------------------------------------------------------------------------------------
+            // Node Template for Type 2
+            //-------------------------------------------------------------------------------------
+            myDiagram.nodeTemplateMap.add("Type2",
+              $(go.Node, "Auto", {
+                locationSpot: go.Spot.Center,
+                cursor: "pointer",
+                toolTip: $("ToolTip", $(go.TextBlock, {
+                  margin: 4,
+                  textAlign: "center"
+                }, new go.Binding("text", "", d => `${d.key}\n[${d.latlong[0].toFixed(6)}, ${d.latlong[1].toFixed(6)}]`)))
+              }, $(go.Shape, "Circle", {
+                fill: "rgba(0, 0, 255, 0.7)",
+                stroke: "#082D47",
+                strokeWidth: 2,
+                width: 40,
+                height: 40
+              }),
+              // A two-way data binding with an Array of latitude,longitude numbers.
+              // We have to explicitly avoid updating the source data Array
+              // when myUpdatingGoJS is true; otherwise there would be accumulating errors.
+              new go.Binding("location", "latlong", data => {
+                const pos = myLeafletMap.project(data, myLeafletMap.getZoom());
+                return new go.Point(pos.x, pos.y);
+              }).makeTwoWay((pt, data) => {
+                if (myUpdatingGoJS) {
+                  return data.latlong; // no-op
+                } else {
+                  const ll = myLeafletMap.unproject(L.point(pt.x, pt.y), myLeafletMap.getZoom());
+                  return [ll.lat, ll.lng];
+                }
+              })));
+
+
+            //-------------------------------------------------------------------------------------
+            // Link Template
+            //-------------------------------------------------------------------------------------
+            myDiagram.linkTemplate = $(go.Link, {
+              layerName: "Background",
+              relinkableFrom: true,
+              relinkableTo: true,
+              toolTip: $("ToolTip", $(go.TextBlock, {
+                margin: 4,
+                textAlign: "center"
+              }, new go.Binding("text", "", d => `${d.from} -- ${d.to}`)), )
+            }, $(go.Shape, {
+              strokeWidth: 3,
+              stroke: "rgba(100,100,255,.7)"
+            }),
+            $(go.Shape, {toArrow: "Standard", stroke: null
+            })
+
+            );
+            // DraggingTool needs to disable panning of Leaflet map
+            myDiagram.toolManager.draggingTool.doActivate = function() { // method override must be function, not =>
+              myLeafletMap.dragging.disable();
+              go.DraggingTool.prototype.doActivate.call(this);
+            }
+            myDiagram.toolManager.draggingTool.doDeactivate = function() { // method override must be function, not =>
+              myLeafletMap.dragging.enable();
+              go.DraggingTool.prototype.doDeactivate.call(this);
+            }
+            
+
+            //-------------------------------------------------------------------------------------
+            // create the model data that will be represented by Nodes and Links
+            //-------------------------------------------------------------------------------------
+            myDiagram.model = new go.GraphLinksModel(
+              [
+                {
+                  key: "London",
+                  latlong: [51.531132, -0.125132], category: 'Type1'
+                },
+              ],
+              []);
+
+            
+            //-------------------------------------------------------------------------------------
+            // Event handler for creating a link
+            //-------------------------------------------------------------------------------------
+            document.getElementById("createLinkButton").addEventListener("click", function() {
+              // Get the selected nodes from the diagram
+              var selectedNodes = myDiagram.selection.toArray();
+              // Check if exactly two nodes are selected
+              if (selectedNodes.length === 2) {
+                // Create a link between the two selected nodes
+                var linkData = {
+                  from: selectedNodes[0].data.key,
+                  to: selectedNodes[1].data.key
+                };
+                // Add the link data to the diagram's model
+                myDiagram.model.addLinkData(linkData);
+              } else {
+                alert("Please select exactly two nodes.");
+              }
+            });
+
+
+
+            //-------------------------------------------------------------------------------------
+            //Event handler for reversing the direction of the selected link
+            //-------------------------------------------------------------------------------------
+            var counter = 0;
+            document.getElementById("reverseLinkButton").addEventListener("click", function() {
+              // Get the selected link from the diagram
+              var selectedLink = myDiagram.selection.first();
+
+              // Check if a link is selected
+              if (selectedLink instanceof go.Link) {
+                // Get the existing link data
+                var linkData = selectedLink.data;
+
+                // Remove the existing link from the model
+                myDiagram.model.removeLinkData(linkData);
+
+                // Create a new link data with reversed endpoints
+                var reversedLinkData = {
+                  key: 'reversedLink'+ (counter++),
+                  from: linkData.to,
+                  to: linkData.from
+                };
+
+                // Add the new reversed link data to the model
+                myDiagram.model.addLinkData(reversedLinkData);
+
+                // Commit the transaction to update the diagram
+                myDiagram.commitTransaction("reverseLink");
+              } else {
+                alert("Please select a link to reverse its direction.");
+              }
+            });
+
+
+            // //-------------------------------------------------------------------------------------
+            // // Event handler for submitting the node form and changing its properties
+            // //-------------------------------------------------------------------------------------
+            // document.getElementById("nodeForm").addEventListener("submit", function(event) {
+            //   event.preventDefault(); // Prevent form submission
+
+            //   // Get the selected node from the diagram
+            //   var selectedNode = myDiagram.selection.first();
+
+            //   // Check if a node is selected
+            //   if (selectedNode instanceof go.Node) {
+            //     // Get the input value from the form
+            //     var text = document.getElementById("fieldToChange").value;
+
+            //     // Update the node data with the new text
+            //     myDiagram.model.startTransaction("updateNode");
+            //     myDiagram.model.setDataProperty(selectedNode.data, "category", text);
+            //     myDiagram.model.commitTransaction("updateNode");
+            //   } else {
+            //     alert("Please select a node to update.");
+            //   }
+            // });
+
+
+
+
+            //-------------------------------------------------------------------------------------
+            // Event handler for submitting the node form and changing its properties
+            //-------------------------------------------------------------------------------------
+            document.getElementById("keyForm").addEventListener("submit", function(event) {
+                event.preventDefault(); // Prevent form submission
+                submitForm('keyToUpdate', 'key') });
+
+            document.getElementById("categoryForm").addEventListener("submit", function(event) {
+                event.preventDefault(); // Prevent form submission
+                submitForm('categoryToUpdate', 'category') });            
+
+
+          } // end init
+
+
+          //-------------------------------------------------------------------------------------
+          //Starts the map and diagram
+          //-------------------------------------------------------------------------------------
+          window.addEventListener('DOMContentLoaded', init);
+          
+
+          //-------------------------------------------------------------------------------------
+          // Function to add a new node
+          //-------------------------------------------------------------------------------------
+          function addNode(type) {
+            var nodeData = {
+              key: "Glasgow2",
+              latlong: [51.531132, -0.14], category: type 
+            }; // Generate a unique key for each node
+            myDiagram.model.addNodeData(nodeData);
+          }
+
+
+          //-------------------------------------------------------------------------------------
+          // Function Save to extract graph into Json
+          //-------------------------------------------------------------------------------------
+          function saveMe() {
+            var diagramJson = myDiagram.model.toJson();
+            var jsonBox = document.getElementById("jsonBox");
+            jsonBox.innerText = diagramJson;
+          }
+
+
+          function submitForm (field, item){
+              // Get the selected node from the diagram
+              var selectedNode = myDiagram.selection.first();
+
+              // Check if a node is selected
+              if (selectedNode instanceof go.Node) {
+                // Get the input value from the form
+                var text = document.getElementById(field).value;
+
+                // Update the node data with the new text
+                myDiagram.model.startTransaction("updateNode");
+                myDiagram.model.setDataProperty(selectedNode.data, item, text);
+                myDiagram.model.commitTransaction("updateNode");
+              } else {
+                alert("Please select a node to update.");
+              }
+          }
+
+
+        </script>
+        <div id="sample">
+          <div id="map" class="mapDiagram">
+            <div id="myDiagramDiv" class="mapDiagram"></div>
+          </div>
+          <div class='center'>
+            <button id="nodeButton1" onclick="addNode('Type1')">Add Type 1</button>
+            <button id="nodeButton2" onclick="addNode('Type2')">Add Type 2</button>
+            <button id="activateLinkButton" onclick="saveMe()">Save</button>
+            <button id="createLinkButton">Addlink</button>
+            <button id="reverseLinkButton">Reverse Link Direction</button>
+
+
+            <form id="keyForm">
+              <label for="text">Key:</label>
+              <input type="text" id="keyToUpdate" name="text" />
+              <button type="submit">Update Node</button>
+            </form>
+
+
+            <form id="categoryForm">
+              <label for="text">Category:</label>
+              <input type="text" id="categoryToUpdate" name="text" />
+              <button type="submit">Update Node</button>
+            </form>
+
+
+            <div id="jsonBox"></div>
+          </div>
+        </div>
+      </div>
+      <!-- * * * * * * * * * * * * * -->
+      <!--  End of GoJS sample code  -->
+    </div>
+
+  </body>
+  <!--  This script is part of the gojs.net website, and is not needed to run the sample -->
+  <script src="../assets/js/goSamples.js"></script>
+</html>
