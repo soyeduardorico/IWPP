@@ -19,6 +19,16 @@ def invert(array):
     return inverted
 
 #------------------------------------------------------------------------------------
+# Round up the data of the geojson to one decimal space
+#------------------------------------------------------------------------------------
+def round_attributes(geojson, precision):
+    for feature in geojson['features']:
+        properties = feature['properties']
+        for key, value in properties.items():
+            if isinstance(value, float):
+                properties[key] = round(value, precision)
+
+#------------------------------------------------------------------------------------
 # returns the positionin of the first '1' in a list or '0' if none
 #------------------------------------------------------------------------------------
 def position (list):
@@ -61,55 +71,10 @@ def status_position (databse_path, status_list):
     return index
 
 
-# #------------------------------------------------------------------------------------
-# # Uses status list to generate quick data to suowcase. TO be substituted with real data
-# #------------------------------------------------------------------------------------
-# def get_pollutant_values(file, status_list):
-#     int_status_list = [int(item) for item in status_list]
-#     # open the original file
-#     with open(file) as f: areasdict = json.load(f)    
-#     # Iterate over the features and obtain the basic values
-#     N=[]
-#     P=[]
-#     for feature in areasdict['features']:
-#         N.append(feature['properties']['N'])
-#         P.append(feature['properties']['P'])
-
-
-#     # Break the status_list into three lists at positions 3 and 6
-#     status_list1 = int_status_list[:3]
-#     status_list2 = int_status_list[3:6]
-#     status_list3 = int_status_list[6:]
-#     st1_multipliers = [1.1,1.2,1.3]
-#     st2_multipliers = [0.9,0.8,0.75]
-#     st3_multipliers = [1.1,1.2,1.3]
-
-#     m1=0
-#     m2=0
-#     m3=0
-#     for status, multiplier in zip(status_list1, st1_multipliers):
-#         m1 += status * multiplier
-#     for status, multiplier in zip(status_list2, st2_multipliers):
-#         m2 += status * multiplier    
-#     for status, multiplier in zip(status_list3, st3_multipliers):
-#         m3 += status * multiplier
-
-#     if m1 == 0:
-#         m1 = 1
-#     if m2 == 0:
-#         m2 = 1
-#     if m3 == 0: 
-#         m3 = 1      
-
-#     N_updated = [item * m1*m2*m3 for item in N]
-#     P_updated = [item * m1*m2*m3 for item in P]
-
-#     return N_updated, P_updated
-
 #------------------------------------------------------------------------------------
 # Reads area geojson and updates its properties with the data from the excel 
 #------------------------------------------------------------------------------------
-def update_values(file,data, baseline_data, legend):
+def update_values(file,data, baseline_data, baseline_data_brent, legend):
     # open the original file
     with open(file) as f: areasdict = json.load(f)
     areasdict['features'] = sorted(areasdict['features'], key=lambda feature: feature['properties']['id'])
@@ -119,9 +84,12 @@ def update_values(file,data, baseline_data, legend):
         if data is not None:
             d1=data.pop(0)
             d2=baseline_data.pop(0)
+            d3=baseline_data_brent.pop(0)
             feature['properties'][legend] = d1
-            feature['properties']['%increase'] = (d1-d2)/d2*100
+            feature['properties']['%increase'] = (d1-d2)/d1*100
+            feature['properties']['%brent'] = (d1-d3)/d1*100
 
+    round_attributes(areasdict, 1)
     return areasdict
 
 

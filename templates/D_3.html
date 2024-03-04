@@ -5,25 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
     <meta name="description" content="A map integrating a GoJS Diagram and the Leaflet mapping library." />
     <link rel="stylesheet" href="../assets/css/style.css" />
+    <link rel="stylesheet" type="text/css" href="{{url_for ('static', filename='iwpp_styles.css')}}">
+    <script type="text/javascript" src="{{url_for('static', filename='iwpp_functions.js')}}"></script>
+
     <!-- Copyright 1998-2023 by Northwoods Software Corporation. -->
     <!-- examples:  https://gojs.net/latest/samples/systemDynamics.html -->
     <title>Leaflet.js and GoJS</title>
   </head>
   <body>
-    <div id="map-container" class="main-window">
-    <div class="md:flex flex-col md:flex-row md:min-h-screen w-full max-w-screen-xl mx-auto">
-      <div id="navSide" class="flex flex-col w-full md:w-48 text-gray-700 bg-white flex-shrink-0"></div>
+    <!-- <div id="map-container" class="main-window"> -->
+    <!-- <div class="md:flex flex-col md:flex-row md:min-h-screen w-full max-w-screen-xl mx-auto"> -->
+      <!-- <div id="navSide" class="flex flex-col w-full md:w-48 text-gray-700 bg-white flex-shrink-0"></div> -->
       <!-- * * * * * * * * * * * * * -->
       <!-- Start of GoJS sample code -->
       <!-- <script src="../release/go.js"></script> -->
       <script type="text/javascript" src="{{url_for ('static', filename='/GoJS-master/GoJS-master/release/go.js')}}"></script>
-      <div id="allSampleContent" class="p-4 w-full">
+      <!-- <div id="allSampleContent" class="p-4 w-full"> -->
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css" />
         <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"></script>
         <style type="text/css">
           /* CSS applied to the Leaflet map */
           .mapDiagram {
-            border: solid 1px black;
+            /* border: solid 1px black; */
             width: 800px;
             height: 800px;
             margin: auto;
@@ -48,57 +51,59 @@
             font-family: monospace;
           }
         </style>
+  <p></p>
 
-
-<div id="sample">
   <div id="map-container" class="main-window">
+
+    <div id="map" class="mapDiagram">
+      <div id="myDiagramDiv" class="mapDiagram"></div>
+    </div>
+
     <div id="side-container">
-      <input type="file" id="imageUpload" accept="image/*">
-      <p>-----------------</p>
-      <p>Image Opacity</p>
-      <input type="range" min="0" max="1" step="0.1" value="0.5" id="opacitySlider" onchange="changeOpacity(this.value)">
-      <p>-----------------</p>
-      <button id="save-button" onclick="saveToNext()">Save to draw</button>
+      <button id="nodeButton1" onclick="addNode('Type1')">Add Type 1</button>
+      <button id="nodeButton2" onclick="addNode('Type2')">Add Type 2</button>
+      <button id="activateLinkButton" onclick="saveMe()">Save</button>
+      <button id="createLinkButton">Addlink</button>
+      <button id="reverseLinkButton">Reverse Link Direction</button>
+      <form id="keyForm">
+        <label for="text">Key:</label>
+        <input type="text" id="keyToUpdate" name="text" />
+        <button type="submit">Update Node</button>
+      </form>
+      <form id="categoryForm">
+        <label for="text">Category:</label>
+        <input type="text" id="categoryToUpdate" name="text" />
+        <button type="submit">Update Node</button>
+      </form>
     </div>
 
     <div id="button-container-top">
-      <button  class="bottom-button"  onclick="toggleSideContainer()"> Stats </button>
+      <button  class="bottom-button"  onclick="toggleSideContainer()"> Toolbar </button>
     </div>
-  <div id="map" class="mapDiagram">
-    <div id="myDiagramDiv" class="mapDiagram"></div>
-  </div>
+
+    <div id="button-container">
+      <button class="bottom-button" onclick="window.location.href='{{ url_for('D_1') }}'">Dashboard</button>
+      <button class="bottom-button" onclick="window.location.href='{{ url_for('D_2_0') }}'">Import site</button>
+      <button class="bottom-button-current">Storm network</button>
+      <button class="bottom-button">Foul network</button>
+      <button class="bottom-button">Potable network</button>
+      <button class="bottom-button">Calc</button>
+    </div>
+
+
+
   
   <div class='center'>
-    <button id="nodeButton1" onclick="addNode('Type1')">Add Type 1</button>
-    <button id="nodeButton2" onclick="addNode('Type2')">Add Type 2</button>
-    <button id="activateLinkButton" onclick="saveMe()">Save</button>
-    <button id="createLinkButton">Addlink</button>
-    <button id="reverseLinkButton">Reverse Link Direction</button>
-
-
-    <form id="keyForm">
-      <label for="text">Key:</label>
-      <input type="text" id="keyToUpdate" name="text" />
-      <button type="submit">Update Node</button>
-    </form>
-
-
-    <form id="categoryForm">
-      <label for="text">Category:</label>
-      <input type="text" id="categoryToUpdate" name="text" />
-      <button type="submit">Update Node</button>
-    </form>
-
-
     <div id="jsonBox"></div>
   </div>
-</div>
-</div>
-</div>
+
+<!-- </div> -->
+
+<!-- </div> -->
 <!-- * * * * * * * * * * * * * -->
 <!--  End of GoJS sample code  -->
-</div>
-</div>
+<!-- </div> -->
+<!-- </div> -->
 
 
 
@@ -140,7 +145,7 @@
               myDiagram.position = new go.Point(pos.x, pos.y);
             }
 
-
+            var nodesize = 20;
             //-------------------------------------------------------------------------------------
             // Setting up the diagram
             //-------------------------------------------------------------------------------------
@@ -185,8 +190,8 @@
                 fill: "rgba(0, 255, 0, 0.7)",
                 stroke: "#082D47",
                 strokeWidth: 2,
-                width: 40,
-                height: 40
+                width: nodesize,
+                height: nodesize
               }),
               // A two-way data binding with an Array of latitude,longitude numbers.
               // We have to explicitly avoid updating the source data Array
@@ -219,8 +224,8 @@
                 fill: "rgba(0, 0, 255, 0.7)",
                 stroke: "#082D47",
                 strokeWidth: 2,
-                width: 40,
-                height: 40
+                width: nodesize,
+                height: nodesize
               }),
               // A two-way data binding with an Array of latitude,longitude numbers.
               // We have to explicitly avoid updating the source data Array
@@ -268,19 +273,59 @@
             }
             
 
+
             //-------------------------------------------------------------------------------------
             // create the model data that will be represented by Nodes and Links
             //-------------------------------------------------------------------------------------
             myDiagram.model = new go.GraphLinksModel(
-              [
-                {
-                  key: "London",
-                  latlong: [51.577, -0.3082], category: 'Type1'
-                },
-              ],
-              []);
+                [
+                {"key":"London","latlong":[51.578563147852854,-0.3060303895477446],"category":"Type1"},
+                {"key":"London2","latlong":[51.57653326808893,-0.3061376779083403],"category":"Type1"},
+                {"key":"London22","latlong":[51.57645177464331,-0.30257331942317617],"category":"Type1"},
+                {"key":"London222","latlong":[51.57488114529436,-0.3023349014261512],"category":"Type1"},
+                {"key":"London2222","latlong":[51.5757998226322,-0.3089629424362684],"category":"Type1"},
+                {"key":"Stormwater","latlong":[51.574051358040805,-0.3028355826250518],"category":"Type1"},
+                {"key":"London3","latlong":[51.57896318637709,-0.31208622291211574],"category":"Type1"},
+                {"key":"London32","latlong":[51.58207447675052,-0.3147088261180797],"category":"Type1"},
+                {"key":"London322","latlong":[51.582044846529705,-0.3063880204722991],"category":"Type1"},
+                {"key":"London3222","latlong":[51.5819411401979,-0.3117285972262507],"category":"Type1"},
+                {"key":"Stormwater2","latlong":[51.5711914367972,-0.2949200852168033],"category":"Type1"},
+                {"key":"Stormwater22","latlong":[51.57251028281024,-0.30870067923439276],"category":"Type1"},
+                {"key":"Stormwater222","latlong":[51.5684202536569,-0.30560123741503414],"category":"Type1"},
+                {"key":"Stormwater2222","latlong":[51.570035562044325,-0.2964459622313043],"category":"Type1"},
+                {"key":"Stormwater22222","latlong":[51.56996146632389,-0.29480087490861845],"category":"Type1"},
+                {"key":"London323","latlong":[51.580541081553214,-0.32003748092444223],"category":"Type1"},
+                {"key":"London3232","latlong":[51.579022450512845,-0.3251038764579462],"category":"Type1"},
+                {"key":"London32322","latlong":[51.57785195911881,-0.32581913175869337],"category":"Type1"},
+                {"key":"London323222","latlong":[51.575792413801565,-0.32534229445497115],"category":"Type1"},
+                {"key":"London3232222","latlong":[51.56875369373392,-0.32143223092185874],"category":"Type1"},
+                {"key":"London3233","latlong":[51.58253374448235,-0.3161154947889045],"category":"Type1"},
+                {"key":"London3234","latlong":[51.57874835090974,-0.3149591634433491],"category":"Type1"}
+                ],
+                [
+                {"from":"London","to":"London2"},
+                {"from":"London22","to":"London222"},
+                {"from":"London2","to":"London222"},
+                {"from":"London2222","to":"Stormwater"},
+                {"from":"London222","to":"Stormwater"},
+                {"from":"Stormwater22","to":"Stormwater222"},
+                {"from":"Stormwater","to":"Stormwater2"},
+                {"from":"Stormwater222","to":"Stormwater2222"},
+                {"from":"Stormwater2222","to":"Stormwater22222"},
+                {"from":"Stormwater2","to":"Stormwater22222"},
+                {"key":"reversedLink0","from":"London3","to":"London2"},
+                {"key":"reversedLink1","from":"London32","to":"London3"},
+                {"key":"reversedLink2","from":"London322","to":"London"},
+                {"key":"reversedLink3","from":"London3222","to":"London32"},
+                {"from":"London323","to":"London3232"},
+                {"from":"London3232","to":"London32322"},
+                {"from":"London32322","to":"London323222"},
+                {"from":"London323222","to":"London3232222"},
+                {"key":"reversedLink4","from":"London3233","to":"London323"},
+                {"key":"reversedLink5","from":"London3234","to":"London3232"}
+                ]
+              );
 
-            
             //-------------------------------------------------------------------------------------
             // Event handler for creating a link
             //-------------------------------------------------------------------------------------

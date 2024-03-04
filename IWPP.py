@@ -30,12 +30,11 @@ river_segments_path = os.path.join(mapData,  'river_segment_render.geojson')
 flow_risk_points_path = os.path.join(mapData,  'flow_risk_points_render.geojson')
 CSO_nodes_path = os.path.join(mapData,  'CSO_nodes_render.geojson')
 databse_path = os.path.join(mapData,  'aggregated_results_webpage.xlsx')
+databse_brent_path = os.path.join(mapData,  'aggregated_results_brent_webpage.xlsx')
 water_source_nodes_path = os.path.join(mapData,  'water_sources.geojson')
 assets_sewers_path = os.path.join(mapData,  'assets_sewers.geojson')
 assets_pumping_path = os.path.join(mapData,  'assets_pumping.geojson')
 asset_databse_path = os.path.join(mapData,  'asset_data.xlsx')
-
-
 
 
 development_items_path = os.path.join(mapData,  'Development.xlsx')
@@ -176,9 +175,9 @@ def S_3_4():
 
     # Generates map and layers  
     m = IWPP_maps.map_base_S_3()
-    m= IWPP_maps.add_features (m, river_segments_path, 'mean_flow' ,'m3/sec', False, None ,status_List, databse_path)
-    m= IWPP_maps.add_features (m, river_segments_path, 'drought_risk' ,'days', True, 'red',  status_List, databse_path)
-    m= IWPP_maps.add_points (m, flow_risk_points_path, 'highflow_risk' ,'days', False, 'blue', status_List, databse_path)
+    m= IWPP_maps.add_features (m, river_segments_path, 'mean_flow' ,'m3/sec', False, None ,status_List, databse_path, databse_brent_path)
+    m= IWPP_maps.add_features (m, river_segments_path, 'drought_risk' ,'days', True, 'red',  status_List, databse_path, databse_brent_path)
+    m= IWPP_maps.add_points (m, flow_risk_points_path, 'highflow_risk' ,'days', False, 'blue', status_List, databse_path, databse_brent_path)
 
     # Create a separate layer control for additional layers
     layer_control = folium.LayerControl(position='topleft', collapsed=False)
@@ -203,10 +202,10 @@ def S_3_5():
     
     # Generates map and layers
     m = IWPP_maps.map_base_S_3()
-    m= IWPP_maps.add_features (m, river_segments_path, 'ammonia_conc' ,'mg/l',True, 'red' ,status_List, databse_path)
-    m= IWPP_maps.add_features (m, river_segments_path, 'nitrate_conc' ,'mg/l',True, 'red' ,status_List, databse_path)
-    m= IWPP_maps.add_features (m, river_segments_path, 'phosphate_conc' ,'mg/l',True, 'red' ,status_List, databse_path)
-    m= IWPP_maps.add_points (m, CSO_nodes_path, 'CSO_events' ,'m3/d', False, 'blue', status_List, databse_path)
+    m= IWPP_maps.add_features (m, river_segments_path, 'ammonia_conc' ,'mg/l',True, 'red' ,status_List, databse_path, databse_brent_path)
+    m= IWPP_maps.add_features (m, river_segments_path, 'nitrate_conc' ,'mg/l',True, 'red' ,status_List, databse_path, databse_brent_path)
+    m= IWPP_maps.add_features (m, river_segments_path, 'phosphate_conc' ,'mg/l',True, 'red' ,status_List, databse_path, databse_brent_path)
+    m= IWPP_maps.add_points (m, CSO_nodes_path, 'CSO_events' ,'m3/d', False, 'blue', status_List, databse_path, databse_brent_path)
 
     # Create a separate layer control for additional layers
     layer_control = folium.LayerControl(position='topleft', collapsed=False)
@@ -233,10 +232,10 @@ def S_3_6():
     # Generates map and layers
     m = IWPP_maps.map_base_S_3()
 
-    m= IWPP_maps.add_features (m, WWTP_path, 'ammonia_load' ,'kg/year',True, 'red', status_List, databse_path)
-    m= IWPP_maps.add_features (m, WWTP_path, 'nitrate_load' ,'kg/year', True, 'red', status_List, databse_path)
-    m= IWPP_maps.add_features (m, WWTP_path, 'phosphate_load' ,'kg/year', True, 'red', status_List, databse_path)
-    m= IWPP_maps.add_points (m, water_source_nodes_path, 'water_demand' ,'m3/day',False, 'blue', status_List, databse_path)
+    m= IWPP_maps.add_features (m, WWTP_path, 'ammonia_load' ,'kg/year',True, 'red', status_List, databse_path, databse_brent_path)
+    m= IWPP_maps.add_features (m, WWTP_path, 'nitrate_load' ,'kg/year', True, 'red', status_List, databse_path, databse_brent_path)
+    m= IWPP_maps.add_features (m, WWTP_path, 'phosphate_load' ,'kg/year', True, 'red', status_List, databse_path, databse_brent_path)
+    m= IWPP_maps.add_points (m, water_source_nodes_path, 'water_demand' ,'m3/day',False, 'blue', status_List, databse_path, databse_brent_path)
 
     # Create a separate layer control for additional layers
     layer_control = folium.LayerControl(position='topleft', collapsed=False)
@@ -299,8 +298,8 @@ def S_4_3():
 
     # Generates map and layers
     m = IWPP_maps.map_base_S_4()
-    m= IWPP_maps.add_features (m, assets_sewers_path, 'asset_sewers_status' ,'status', True, 'red', status_List, asset_databse_path)
-    m= IWPP_maps.add_points (m, assets_pumping_path, 'asset_pumping_status' ,'status',False, 'blue', status_List, asset_databse_path)
+    m= IWPP_maps.add_features (m, assets_sewers_path, 'asset_sewers_status' ,'status', True, 'red', status_List, asset_databse_path, asset_databse_path)
+    m= IWPP_maps.add_points (m, assets_pumping_path, 'asset_pumping_status' ,'status',False, 'blue', status_List, asset_databse_path, asset_databse_path)
 
     # Create a separate layer control for additional layers
     layer_control = folium.LayerControl(position='topleft', collapsed=False)
@@ -361,12 +360,19 @@ def D_2_1():
     return render_template('D_2_1.html', session_name=session['user'])
 
 
+# @app.route('/D_3')
+# def D_3():
+#     #json_data = request.args.get('json_data')
+#     user_id = session.get('user')
+#     return render_template('D_3.html', session_name=session['user'])
+
+
+
 @app.route('/D_3')
 def D_3():
     #json_data = request.args.get('json_data')
     user_id = session.get('user')
     return render_template('D_3.html', session_name=session['user'])
-
 
 #------------------------------------------------------------------------------------
 # Starts the server

@@ -162,17 +162,19 @@ def add_points_colourcoded (map, point_file_path, label, pointsize):
 #------------------------------------------------------------------------------------
 # Adds colourcoded (colourcoded=True) or thickness(colourcoded-False) rendered features from a geojson to a given map
 #------------------------------------------------------------------------------------
-def add_features (map, geometry_file_path, variable, legend ,colourcoded, colour, status_list, property_list_path=None):
+def add_features (map, geometry_file_path, variable, legend ,colourcoded, colour, status_list, property_list_path,property_list_path_brent):
     m = map 
 
     # Read the Excel file
     df = pd.read_excel(property_list_path, sheet_name=variable)
+    df_brent = pd.read_excel(property_list_path_brent, sheet_name=variable)
 
     # obtains the position in the excel related to the status_list
     position = IWPP_functions.status_position(property_list_path, status_list)
    
-    # updates the values in the geojson with the data related to the status to later display it
+    # reads the data related to the status to later display it
     variable_to_add = df.iloc[:, position].tolist() # Get the nth column (assuming n is 0-indexed)   
+    variable_to_add_brent = df_brent.iloc[:, position].tolist() # Get the nth column (assuming n is 0-indexed)   
     variable_to_add_baseline = df.iloc[:, 1].tolist() # brings the baseline data to compare
 
     # Calculate the maximum and minimum
@@ -181,7 +183,7 @@ def add_features (map, geometry_file_path, variable, legend ,colourcoded, colour
     min_value = df.min().min()
 
     # generates a new geogson with the old geometry and the new properties
-    map_data = IWPP_functions.update_values(geometry_file_path,variable_to_add, variable_to_add_baseline, legend)
+    map_data = IWPP_functions.update_values(geometry_file_path,variable_to_add, variable_to_add_baseline, variable_to_add_brent, legend)
 
     if colourcoded == True:
         # Define a colormap
@@ -212,17 +214,19 @@ def add_features (map, geometry_file_path, variable, legend ,colourcoded, colour
     return m
 
 
-def add_points (map, point_file_path, variable, legend ,colourcoded, colour, status_list=None, property_list_path=None):
+def add_points (map, point_file_path, variable, legend ,colourcoded, colour, status_list, property_list_path, property_list_path_brent):
     m = map 
 
     # Read the Excel file
     df = pd.read_excel(property_list_path, sheet_name=variable)
+    df_brent = pd.read_excel(property_list_path_brent, sheet_name=variable)
 
     # obtains the position in the excel related to the status_list
     position = IWPP_functions.status_position(property_list_path, status_list)
    
     # updates the values in the geojson with the data related to the status to later display it
     variable_to_add = df.iloc[:, position].tolist() # Get the nth column (assuming n is 0-indexed)   
+    variable_to_add_brent = df_brent.iloc[:, position].tolist() # Get the nth column (assuming n is 0-indexed)   
     variable_to_add_baseline = df.iloc[:, 1].tolist() # brings the baseline data to compare
 
     # Calculate the maximum and minimum
@@ -231,7 +235,7 @@ def add_points (map, point_file_path, variable, legend ,colourcoded, colour, sta
     min_value = df.min().min()
 
     # generates a new geogson with the old geometry and the new properties
-    map_data = IWPP_functions.update_values(point_file_path,variable_to_add, variable_to_add_baseline, legend)
+    map_data = IWPP_functions.update_values(point_file_path,variable_to_add, variable_to_add_baseline, variable_to_add_brent, legend)
 
     # Define a colormap
     # at the moment min and max are 0-1, but they should be the min and max of the property
